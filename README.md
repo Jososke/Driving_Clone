@@ -17,6 +17,7 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 
 [image1]: ./writeup_images/nvidia.png "Model Architecture"
+[image2]: ./writeup_images/drive_example.jpg "Training"
 
 ---
 ### Code Overview
@@ -48,19 +49,27 @@ My first step was to use Keras to train a network to take an image from the cent
 
 The network was used to verify that everything is working properly and consisted of a flattened image connected to a single output node. This single output node predicted the steering angle, which makes this a regression network and no activation function will be applied. This will try to minimize the error that the network predicts and the ground truth steering measurement. 
 
-From there I build up the model to include normalization. Normalization is a way to remove effects of brightness or other image variations and focus on the content of the image instead of the brightness or other effects in the image. Note here, the simulator was not robust enough to verify that normalization was necessary - no apprant changing sun angles - but this step is crucial in the actual development of a self driving car. In this project, a lambda layer is a convenient way to parallelize image normalization. The lambda layer will also ensure that the model will normalize input images when making predictions in drive.py. 
+From there I built up the model to include normalization. Normalization is a way to remove effects of brightness or other image variations and focus on the content of the image instead of the brightness or other effects in the image. Note here, the simulator was not robust enough to verify that normalization was necessary - no apprant changing sun angles - but this step is crucial in the actual development of a self driving car. In this project, a lambda layer is a convenient way to parallelize image normalization. The lambda layer will also ensure that the model will normalize input images when making predictions in drive.py. 
 
 Another feature the training data was that for track 1 the track was circular so the car was constantly turning to the left. This added a left turn bias to the car. To combat the left turn bias, I flipped all of the training data and measurements and added the flipped images and measurements to the training data. 
 
+In a real car, we’ll have multiple cameras on the vehicle, and we’ll map recovery paths from each camera. For example, if you train the model to associate a given image from the center camera with a left turn, then you could also train the model to associate the corresponding image from the left camera with a somewhat softer left turn. And you could train the model to associate the corresponding image from the right camera with an even harder left turn.
 
+Multiple cameras were used in this project to feed in more images at different angles to the model. When recording the simulator saved images from three camers - center, left, and right - which were used to teach the model how to steer if the car drifts off to the left or the right. A steering offset was applied to add or subtract from the center angle for the left and right camera. The steering angle was determined based on experimentation. In a real self driving car - a full physics model would be used to determine the actual steering angle offset. 
+
+A cropping layer was used to remove the top portion of the image and the hood of the car. The top portion of the image contained trees and other features that were not useful for training the model and the bottom portion of the image contained the hood of the car, which is fixed and can be removed. By adding in a cropping layer, new images coming from the simulator will be cropped when they are used on the final deep neural network. 
+
+I initally started with the LeNet architecture to rapidly test measurments on a deep neural netowrk. This proved to be a good estimation for steering the car.
 
 In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
 
-To combat the overfitting, I modified the model so that ...
+To combat the overfitting, I modified the model so that a dropout layer with 50% dropout was utilized.
 
-Then I ... 
+Then I utilized the deep neural network for self driving cars published by NVIDIA for my architecture design and included the dropout layer, cropping layer, and normalization.  
 
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
+Other steps in the design that can be found in the python notebook include visualizing the loss over multiple epochs and using generators. Generators were not found to be necessary for the amount of training data that I had, so they were removed for the final model.
+
+The final step was to run the simulator to see how well the car was driving around track one. From the image processing pipeline the driving clone was close to being able to run around the track, but saw issues before and after the bridge. Tuning the parameters such as epochs, dropout, and cropping along with including the augmented data solved these issues. 
 
 At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
 
@@ -73,19 +82,22 @@ My model was adapted from the NVIDIA Deep Neural Network for self driving cars w
 
 The first layer of the network performs image normalization. The normalizer is hard-coded and is not adjusted in the learning process. Performing normalization in the network allows the normalization scheme to be altered with the network architecture, and to be accelerated via GPU processing.
 
-The convolutional layers are designed to perform feature extraction, and are chosen empirically through a series of experiments that vary layer configurations. We then use strided convolutions in the first three convolutional layers with a 2×2 stride and a 5×5 kernel, and a non-strided convolution with a 3×3 kernel size in the final two convolutional layers.
+A cropping layer was used to remove the top portion of the image and the hood of the car. The top portion of the image contained trees and other features that were not useful for training the model and the bottom portion of the image contained the hood of the car, which is fixed and can be removed. By adding in a cropping layer, new images coming from the simulator will be cropped when they are used on the final deep neural network. 
 
-We follow the five convolutional layers with three fully connected layers, leading to a final output control value which is the inverse-turning-radius. The fully connected layers are designed to function as a controller for steering, but we noted that by training the system end-to-end, it is not possible to make a clean break between which parts of the network function primarily as feature extractor, and which serve as controller.
+The convolutional layers are designed to perform feature extraction, and are chosen empirically through a series of experiments that vary layer configurations. We then use strided convolutions in the first three convolutional layers with a 2×2 stride and a 5×5 kernel, and a non-strided convolution with a 3×3 kernel size in the final two convolutional layers. Each convolution layer has a relu activation function.
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
+After the five convolutional layers the model is flattened so fully connected layers can be operated on. After flattening, a dropout layer was added. To combat the overfitting, I modified the model so that a dropout layer with 50% dropout was utilized.
 
-The model includes RELU layers to introduce nonlinearity (code line 20), and the data is normalized in the model using a Keras lambda layer (code line 18). 
+After the five convolutional layers, three fully connected layers are added, leading to a final output control value which is the inverse-turning-radius. The fully connected layers are designed to function as a controller for steering, but it should be noted that by training the system end-to-end, it is not possible to make a clean break between which parts of the network function primarily as feature extractor, and which serve as controller.
+
+The model used an adam optimizer, so the learning rate was not tuned manually and a mean square error was used as the loss function for the regression network. 
+
 
 #### 3. Attempts to reduce overfitting in the model
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
+In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+To combat the overfitting, I modified the model so that a dropout layer with 50% dropout was utilized.
 
 #### 4. Model parameter tuning
 
@@ -93,35 +105,42 @@ The model used an adam optimizer, so the learning rate was not tuned manually.
 
 #### 5. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road ... 
+The sample driving data set was used as it proved to have good set of different cases to train the model.
+
+Multiple cameras were used in this project to feed in more images at different angles to the model. When recording the simulator saved images from three camers - center, left, and right - which were used to teach the model how to steer if the car drifts off to the left or the right. A steering offset was applied to add or subtract from the center angle for the left and right camera. The steering angle was determined based on experimentation. In a real self driving car - a full physics model would be used to determine the actual steering angle offset. 
+
+Another feature the training data was that for track 1 the track was circular so the car was constantly turning to the left. This added a left turn bias to the car. To combat the left turn bias, I flipped all of the training data and measurements and added the flipped images and measurements to the training data. 
+
 
 #### 6. Creation of the Training Set & Training Process
 
-In order to start collecting training data, you'll need to do the following:
+The simulator was used to collect training data. Note here - that for this project the sample driving data set was used. To create additional data sets the following steps would be used:
 
-Enter Training Mode in the simulator.
-Start driving the car to get a feel for the controls.
-When you are ready, hit the record button in the top right to start recording.
-Continue driving for a few laps or till you feel like you have enough data.
-Hit the record button in the top right again to stop recording.
+* Enter Training Mode in the simulator.
+* Start driving the car to get a feel for the controls.
+* When you are ready, hit the record button in the top right to start recording.
+* Continue driving for a few laps or till you feel like you have enough data.
+* Hit the record button in the top right again to stop recording.
+
 Strategies for Collecting Data
-the car should stay in the center of the road as much as possible
-if the car veers off to the side, it should recover back to center
-driving counter-clockwise can help the model generalize
-flipping the images is a quick way to augment the data
-collecting data from the second track can also help generalize the model
-we want to avoid overfitting or underfitting when training the model
-knowing when to stop collecting more data
-Data will be saved from the recorder as follows:
 
-IMG folder - this folder contains all the frames of your driving.
-driving_log.csv - each row in this sheet correlates your image with the steering angle, throttle, brake, and speed of your car. You'll mainly be using the steering angle.
+* the car should stay in the center of the road as much as possible
+* if the car veers off to the side, it should recover back to center
+* driving counter-clockwise can help the model generalize
+* flipping the images is a quick way to augment the data
+* collecting data from the second track can also help generalize the model
+* we want to avoid overfitting or underfitting when training the model
+* knowing when to stop collecting more data
 
+The sample driving data contains 8037 images, which are summarized in `driving_log.csv`
 
-I then preprocessed this data by ...
+the csv file contains a link to each frame along with the name of the associated center, left, right image file names, the steering angle, throttle value, brake value, and speed at each frame. The image below shows an example of the output from the center camera of the simulator. 
 
+![alt text][image2]
 
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
+I then preprocessed this data by normalizing and adding a cropping layer. Normalization is a way to remove effects of brightness or other image variations and focus on the content of the image instead of the brightness or other effects in the image. A cropping layer was used to remove the top portion of the image and the hood of the car. The top portion of the image contained trees and other features that were not useful for training the model and the bottom portion of the image contained the hood of the car, which is fixed and can be removed. By adding in a cropping layer, new images coming from the simulator will be cropped when they are used on the final deep neural network. 
 
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+I randomly shuffled the data set and put 20% of the data into a validation set. 
+
+I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was 5 as evidenced by the decreasing loss and validation loss value from the model. More than 5 epochs showed that the validation loss was increasing, which meant I was overfitting my training data. I used an adam optimizer so that manually training the learning rate wasn't necessary.
 
