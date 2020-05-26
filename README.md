@@ -67,7 +67,7 @@ To combat the overfitting, I modified the model so that a dropout layer with 50%
 
 Then I utilized the deep neural network for self driving cars published by NVIDIA for my architecture design and included the dropout layer, cropping layer, and normalization.  
 
-Other steps in the design that can be found in the python notebook include visualizing the loss over multiple epochs and using generators. Generators were not found to be necessary for the amount of training data that I had, so they were removed for the final model.
+Other steps in the design that can be found in the python notebook include visualizing the loss over multiple epochs and using generators. Generators were used to store less data in memory.
 
 The final step was to run the simulator to see how well the car was driving around track one. From the image processing pipeline the driving clone was close to being able to run around the track, but saw issues before and after the bridge. Tuning the parameters such as epochs, dropout, and cropping along with including the augmented data solved these issues. 
 
