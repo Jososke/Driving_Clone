@@ -114,7 +114,7 @@ Another feature the training data was that for track 1 the track was circular so
 
 #### 6. Creation of the Training Set & Training Process
 
-The simulator was used to collect training data. Note here - that for this project the sample driving data set was used. To create additional data sets the following steps would be used:
+The simulator was used to collect training data. Note here - that for this project the sample driving data set was used. To create additional data sets were used:
 
 * Enter Training Mode in the simulator.
 * Start driving the car to get a feel for the controls.
@@ -132,7 +132,10 @@ Strategies for Collecting Data
 * we want to avoid overfitting or underfitting when training the model
 * knowing when to stop collecting more data
 
-The sample driving data contains 8037 images, which are summarized in `driving_log.csv`
+The sample driving data contains 8037 images, which are summarized in `data/driving_log.csv`
+The sample driving data 2 contains 4536 images, which are summarized in `data/data2/driving_log.csv`
+
+Both of these files were merged together.
 
 the csv file contains a link to each frame along with the name of the associated center, left, right image file names, the steering angle, throttle value, brake value, and speed at each frame. The image below shows an example of the output from the center camera of the simulator. 
 
