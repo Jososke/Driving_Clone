@@ -67,7 +67,7 @@ To combat the overfitting, I modified the model so that a dropout layer with 50%
 
 Then I utilized the deep neural network for self driving cars published by NVIDIA for my architecture design and included the dropout layer, cropping layer, and normalization.  
 
-Other steps in the design that can be found in the python notebook include visualizing the loss over multiple epochs and using generators. Generators were not found to be necessary for the amount of training data that I had, so they were removed for the final model.
+Other steps in the design that can be found in the python notebook include visualizing the loss over multiple epochs and using generators. Generators were used to store less data in memory.
 
 The final step was to run the simulator to see how well the car was driving around track one. From the image processing pipeline the driving clone was close to being able to run around the track, but saw issues before and after the bridge. Tuning the parameters such as epochs, dropout, and cropping along with including the augmented data solved these issues. 
 
@@ -114,7 +114,7 @@ Another feature the training data was that for track 1 the track was circular so
 
 #### 6. Creation of the Training Set & Training Process
 
-The simulator was used to collect training data. Note here - that for this project the sample driving data set was used. To create additional data sets the following steps would be used:
+The simulator was used to collect training data. Note here - that for this project the sample driving data set was used. To create additional data sets were used:
 
 * Enter Training Mode in the simulator.
 * Start driving the car to get a feel for the controls.
@@ -132,7 +132,10 @@ Strategies for Collecting Data
 * we want to avoid overfitting or underfitting when training the model
 * knowing when to stop collecting more data
 
-The sample driving data contains 8037 images, which are summarized in `driving_log.csv`
+The sample driving data contains 8037 images, which are summarized in `data/driving_log.csv`
+The sample driving data 2 contains 4536 images, which are summarized in `data/data2/driving_log.csv`
+
+Both of these files were merged together.
 
 the csv file contains a link to each frame along with the name of the associated center, left, right image file names, the steering angle, throttle value, brake value, and speed at each frame. The image below shows an example of the output from the center camera of the simulator. 
 
